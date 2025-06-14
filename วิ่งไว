@@ -1,0 +1,10 @@
+local player = game.Players.LocalPlayer
+local speed = 200 -- ความเร็วที่ต้องการ
+
+while true do
+    task.wait(0.1)
+    local char = player.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.WalkSpeed = speed
+    end
+end

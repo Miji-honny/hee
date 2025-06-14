@@ -1,0 +1,52 @@
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local PlayerGui = lp:WaitForChild("PlayerGui")
+
+-- GUI
+local screenGui = Instance.new("ScreenGui", PlayerGui)
+screenGui.ResetOnSpawn = false
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 120, 0, 50)
+button.Position = UDim2.new(1, -130, 1, -60) -- มุมขวาล่าง
+button.Text = "วาร์ป: ปิด"
+button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+button.TextColor3 = Color3.new(1,1,1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 22
+button.Parent = screenGui
+
+-- ระบบวาร์ป
+local warpEnabled = false
+
+local function getRandomTarget()
+    local candidates = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= lp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(candidates, plr.Character)
+        end
+    end
+    if #candidates > 0 then
+        return candidates[math.random(1, #candidates)]
+    end
+end
+
+-- ลูปวาร์ป
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if warpEnabled then
+            local char = lp.Character or lp.CharacterAdded:Wait()
+            local target = getRandomTarget()
+            if target and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame + Vector3.new(0, 5, 0)
+            end
+        end
+    end
+end)
+
+-- ปุ่มกดเปิด/ปิด
+button.MouseButton1Click:Connect(function()
+    warpEnabled = not warpEnabled
+    button.Text = "วาร์ป: " .. (warpEnabled and "เปิด" or "ปิด")
+end)

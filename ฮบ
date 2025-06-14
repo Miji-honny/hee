@@ -1,0 +1,27 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HeadSize = 500
+local TransparencyLevel = 1
+local Enabled = true
+
+local function updateHitbox(player)
+    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local root = player.Character.HumanoidRootPart
+        root.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
+        root.Transparency = TransparencyLevel
+        root.BrickColor = BrickColor.new("Medium stone grey")
+        root.Material = Enum.Material.Plastic
+        root.CanCollide = false
+    end
+end
+
+task.spawn(function()
+    while true do
+        if Enabled then
+            for _, player in pairs(Players:GetPlayers()) do
+                updateHitbox(player)
+            end
+        end
+        task.wait(0.1)
+    end
+end)

@@ -1,0 +1,89 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local lp = Players.LocalPlayer
+local PlayerGui = lp:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = PlayerGui
+screenGui.ResetOnSpawn = false
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 150, 0, 50)
+button.Position = UDim2.new(0.5, -75, 1, -60) -- กลางล่างจอ
+button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+button.TextColor3 = Color3.new(1,1,1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 22
+button.Text = "Auto Warp & Press: Off"
+button.Parent = screenGui
+
+local autoPressEnabled = false
+local warpTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Linear)
+
+local function getClosestPrompt()
+    local character = lp.Character
+    if not character then return nil end
+
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local closestPrompt = nil
+    local closestDistance = math.huge
+
+    for _, prompt in ipairs(workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") and prompt.Enabled and prompt.Parent and prompt.Parent:IsA("BasePart") then
+            local dist = (hrp.Position - prompt.Parent.Position).Magnitude
+            if dist < closestDistance then
+                closestDistance = dist
+                closestPrompt = prompt
+            end
+        end
+    end
+
+    return closestPrompt, closestDistance
+end
+
+local function warpToPosition(pos)
+    local character = lp.Character
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local targetCFrame = CFrame.new(pos.X, pos.Y + 3, pos.Z)
+    TweenService:Create(hrp, warpTweenInfo, {CFrame = targetCFrame}):Play()
+end
+
+local function autoWarpAndPress()
+    local character = lp.Character
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local prompt, dist = getClosestPrompt()
+    if prompt then
+        warpToPosition(prompt.Parent.Position)
+
+        task.delay(0.35, function()
+            if prompt.Enabled then
+                prompt:InputHoldBegin()
+                task.wait(0.2)
+                prompt:InputHoldEnd()
+            end
+        end)
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)  -- เปลี่ยนตรงนี้เป็น 0.1 วินาที
+        if autoPressEnabled then
+            autoWarpAndPress()
+        end
+    end
+end)
+
+button.MouseButton1Click:Connect(function()
+    autoPressEnabled = not autoPressEnabled
+    button.Text = "Auto Warp & Press: " .. (autoPressEnabled and "On" or "Off")
+end)

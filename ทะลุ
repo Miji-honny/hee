@@ -1,0 +1,68 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local flying = false
+
+-- UI Button
+local PlayerGui = player:WaitForChild("PlayerGui")
+local screenGui = Instance.new("ScreenGui", PlayerGui)
+screenGui.ResetOnSpawn = false
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 120, 0, 40)
+button.Position = UDim2.new(0, 20, 0, 80)
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 20
+button.Text = "ทะลุ: ปิด"
+button.Parent = screenGui
+
+-- Toggle Noclip
+local function toggleNoclip()
+	flying = not flying
+	button.Text = flying and "ทะลุ: เปิด" or "ทะลุ: ปิด"
+
+	if flying then
+		humanoid.PlatformStand = true -- ปิดระบบฟิสิกส์ของ Humanoid
+		RunService:BindToRenderStep("NoClip", Enum.RenderPriority.Character.Value, function()
+			if character and hrp then
+				for _, part in pairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+
+				local moveDir = humanoid.MoveDirection
+				if moveDir.Magnitude > 0 then
+					hrp.AssemblyLinearVelocity = moveDir.Unit * 70
+				else
+					hrp.AssemblyLinearVelocity = Vector3.zero
+				end
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("NoClip")
+		humanoid.PlatformStand = false -- คืนค่าควบคุม Humanoid
+		for _, part in pairs(character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+		hrp.AssemblyLinearVelocity = Vector3.zero
+	end
+end
+
+button.MouseButton1Click:Connect(toggleNoclip)
+
+-- Update Character if respawn
+player.CharacterAdded:Connect(function(char)
+	character = char
+	hrp = char:WaitForChild("HumanoidRootPart")
+	humanoid = char:WaitForChild("Humanoid")
+end)
